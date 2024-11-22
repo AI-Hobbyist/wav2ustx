@@ -75,7 +75,7 @@ def vocal_remover_step3(input, output):
     separator = MSSeparator(
         model_type='mel_band_roformer',
         config_path='configs_backup/single_stem_models/deverb_bs_roformer_8_256dim_8depth.yaml',
-        model_path='mpretrain/single_stem_models/deverb_bs_roformer_8_256dim_8depth.ckpt',
+        model_path='pretrain/single_stem_models/deverb_bs_roformer_8_256dim_8depth.ckpt',
         device='auto',
         device_ids=[0],
         output_format='wav',
