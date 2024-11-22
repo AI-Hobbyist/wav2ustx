@@ -174,6 +174,40 @@ class MSSeparator:
 
             success_files.append(os.path.basename(path))
         return success_files
+    
+    def process_audio(self, audio_path):
+        try:
+            mix, sr = librosa.load(audio_path, sr=44100, mono=False)
+        except Exception as e:
+            self.logger.warning(f'Cannot process audio: {audio_path}, error: {str(e)}')
+        
+        if len(mix.shape) == 1:
+            mix = np.stack([mix, mix], axis=0)
+        if len(mix.shape) > 2:
+            mix = np.mean(mix, axis=0)
+            mix = np.stack([mix, mix], axis=0)
+            self.logger.warning(f"Audio {audio_path} has more than 2 channels, taking mean of all channels. As a result, the output instruments will be mono but in stereo format.")
+            
+        self.logger.debug(f"Starting separation process for audio_file: {audio_path}")
+        results = self.separate(mix)
+        self.logger.debug(f"Separation audio_file: {audio_path} completed. Starting to save results.")
+        
+        file_name, _ = os.path.splitext(os.path.basename(audio_path))
+        for instr in results.keys():
+            save_dir = self.store_dirs.get(instr, "")
+            if save_dir and type(save_dir) == str:
+                os.makedirs(save_dir, exist_ok=True)
+                self.save_audio(results[instr], sr, f"{file_name}_{instr}", save_dir)
+                self.logger.debug(f"Saved {instr} for {file_name}_{instr}.{self.output_format} in {save_dir}")
+            elif save_dir and type(save_dir) == list:
+                for dir in save_dir:
+                    os.makedirs(dir, exist_ok=True)
+                    self.save_audio(results[instr], sr, f"{file_name}_{instr}", dir)
+                    self.logger.debug(f"Saved {instr} for {file_name}_{instr}.{self.output_format} in {dir}")
+        sucess_files = os.path.basename(audio_path)
+        return sucess_files    
+        
+        
 
     def separate(self, mix):
         instruments = self.config.training.instruments.copy()
