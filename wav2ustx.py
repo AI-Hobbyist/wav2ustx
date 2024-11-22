@@ -184,22 +184,15 @@ def svp2ustx(svp_path):
         
     process.communicate()
     
-#打包结果
-def pack_result():
-    Path('project_pack').mkdir(parents=True, exist_ok=True)
-    file_name = random_filename()
-    command = f'7z a -tzip "project_pack/{file_name}.zip" "final"'
-    subprocess.run(command, shell=True)
-    print(f'工程已生成并打包至 project_pack/{file_name}.zip')
     
     
 #==============主函数==============
-def wav2ustx(audio, tempo, enabled_steps):
+def wav2ustx(audio, tempo, enabled_steps, output):
     #初始化
     Path('results').mkdir(parents=True, exist_ok=True)
     Path('project_pack').mkdir(parents=True, exist_ok=True)
     Path('tempfiles').mkdir(parents=True, exist_ok=True)
-    Path('final').mkdir(parents=True, exist_ok=True)
+    Path(output).mkdir(parents=True, exist_ok=True)
     
     base_name = str(Path(audio).name).replace('.wav', '')
     
@@ -211,7 +204,7 @@ def wav2ustx(audio, tempo, enabled_steps):
     if 'voice_remove' in enabled_steps:
         Path('results/step1').mkdir(parents=True, exist_ok=True)
         vocal_remover_step1('tempfiles', 'results/step1')
-        move(f'results/step1/{base_name}_instrumental.wav', f'final/{base_name}_instrumental.wav')
+        move(f'results/step1/{base_name}_instrumental.wav', f'{output}/{base_name}_instrumental.wav')
         src = f'results/step1/{base_name}_vocals.wav'
         
     if 'harmony_remove' in enabled_steps:
@@ -232,19 +225,18 @@ def wav2ustx(audio, tempo, enabled_steps):
         Path(f'results/step2/{base_name}_other.wav').unlink()
         src = f'results/step4/{base_name}_dry.wav'
     
-    move(src, f'final/{base_name}.wav')
-    svp_path = wav2svp(f'final/{base_name}.wav', tempo)
+    move(src, f'{output}/{base_name}.wav')
+    svp_path = wav2svp(f'{output}/{base_name}.wav', tempo)
     svp2ustx(svp_path)
-    pack_result()
     rmtree('tempfiles')
     rmtree('results')
-    rmtree('final')
     
 #==============命令行==============
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='wav2ustx')
-    parser.add_argument('-a','--audio', type=str, help='音频文件', required=True)
-    parser.add_argument('-t','--tempo', type=int, help='曲速', required=True)
-    parser.add_argument('-s','--enabled_steps', type=str, help='启用的步骤，用逗号分隔，可选值：voice_remove, harmony_remove, deverb, denoise', required=True)
+    parser.add_argument('audio', type=str, help='音频文件')
+    parser.add_argument('output', type=str, help='输出文件夹')
+    parser.add_argument('-t','--tempo', type=int, help='曲速', default=120)
+    parser.add_argument('-s','--enabled_steps', type=str, help='启用的步骤，用逗号分隔，可选值：voice_remove, harmony_remove, deverb, denoise')
     args = parser.parse_args()
-    wav2ustx(args.audio, args.tempo, args.enabled_steps.split(','))
+    wav2ustx(args.audio, args.tempo, args.enabled_steps.split(','), args.output)
