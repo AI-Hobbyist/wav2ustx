@@ -5,18 +5,18 @@
 ## 使用方法
 1. 安装PyTorch
 ```shell
-pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
 ```
 2. 安装依赖
 ```shell
-pip3 install -r requirements.txt
+pip install -r requirements.txt
 ```
-3. 推理
+3. 命令行推理
 ```shell
-python wav2ustx.py -a 歌声路径 -t 曲速 -s 启用步骤
+python wav2ustx.py 歌声路径 输出路径 -t 曲速 -s 启用步骤
 ```
 ### 关于启用步骤
-**可选值：** voice_remove, harmony_remove, deverb, denoise
+**可选值：** vocal_separation, harmony_removal, deverb, denoise
 
 **注意事项：** 每步要用英文逗号 , 分隔。
 
