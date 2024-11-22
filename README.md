@@ -15,6 +15,11 @@ pip install -r requirements.txt
 ```shell
 python wav2ustx.py 歌声路径 输出路径 -t 曲速 -s 启用步骤
 ```
+
+4. webui推理
+```shell
+python webui.py
+```
 ### 关于启用步骤
 **可选值：** vocal_separation, harmony_removal, deverb, denoise
 
