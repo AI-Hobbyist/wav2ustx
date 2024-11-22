@@ -42,7 +42,7 @@ def vocal_remover_step1(input, output):
         logger=logger,
         debug=False
     )
-    success_files = separator.process_folder(input)
+    success_files = separator.process_audio(input)
     separator.del_cache()
     logger.info(f"Successfully separated files: {success_files}, total time: {time() - start_time:.2f} seconds.")
     
@@ -63,7 +63,7 @@ def vocal_remover_step2(input, output):
         logger=logger,
         debug=False
     )
-    success_files = separator.process_folder(input)
+    success_files = separator.process_audio(input)
     separator.del_cache()
     logger.info(f"Successfully separated files: {success_files}, total time: {time() - start_time:.2f} seconds.")
     
@@ -84,7 +84,7 @@ def vocal_remover_step3(input, output):
         logger=logger,
         debug=False
     )
-    success_files = separator.process_folder(input)
+    success_files = separator.process_audio(input)
     separator.del_cache()
     logger.info(f"Successfully separated files: {success_files}, total time: {time() - start_time:.2f} seconds.")
     
@@ -105,7 +105,7 @@ def vocal_remover_step4(input, output):
         logger=logger,
         debug=False
     )
-    success_files = separator.process_folder(input)
+    success_files = separator.process_audio(input)
     separator.del_cache()
     logger.info(f"Successfully separated files: {success_files}, total time: {time() - start_time:.2f} seconds.")
     
@@ -189,58 +189,57 @@ def svp2ustx(svp_path):
 #==============主函数==============
 def wav2ustx(audio, tempo, enabled_steps, output):
     #初始化
+    try:
+        rmtree('results')
+    except:
+        pass
     Path('results').mkdir(parents=True, exist_ok=True)
-    Path('project_pack').mkdir(parents=True, exist_ok=True)
-    Path('tempfiles').mkdir(parents=True, exist_ok=True)
     Path(output).mkdir(parents=True, exist_ok=True)
     
     base_name = str(Path(audio).name).replace('.wav', '')
-    
-    copy(audio, f'tempfiles/{base_name}.wav')
     src = audio
     
     
     #执行步骤
     if 'voice_remove' in enabled_steps:
         Path('results/step1').mkdir(parents=True, exist_ok=True)
-        vocal_remover_step1('tempfiles', 'results/step1')
+        vocal_remover_step1(src, 'results/step1')
         move(f'results/step1/{base_name}_instrumental.wav', f'{output}/{base_name}_instrumental.wav')
         src = f'results/step1/{base_name}_vocals.wav'
         
     if 'harmony_remove' in enabled_steps:
         Path('results/step2').mkdir(parents=True, exist_ok=True)
-        vocal_remover_step2('results/step1', 'results/step2')
+        vocal_remover_step2(src, 'results/step2')
         audios = glob(f'results/step2/*.wav')
-        for audio in audios:
-            if '_other.wav' in audio:
-                Path(audio).unlink()
+        for au in audios:
+            if '_other.wav' in au:
+                Path(au).unlink()
             else:
-                src = audio
+                src = au
         
     if 'deverb' in enabled_steps:
         Path('results/step3').mkdir(parents=True, exist_ok=True)
-        vocal_remover_step3('results/step2', 'results/step3')
+        vocal_remover_step3(src, 'results/step3')
         audios = glob(f'results/step3/*.wav')
-        for audio in audios:
-            if '_reverb.wav' in audio:
-                Path(audio).unlink()
+        for au in audios:
+            if '_reverb.wav' in au:
+                Path(au).unlink()
             else:
-                src = audio
+                src = au
         
     if 'denoise' in enabled_steps:
         Path('results/step4').mkdir(parents=True, exist_ok=True)
-        vocal_remover_step4('results/step3', 'results/step4')
+        vocal_remover_step4(src, 'results/step4')
         audios = glob(f'results/step4/*.wav')
-        for audio in audios:
-            if '_other.wav' in audio:
-                Path(audio).unlink()
+        for au in audios:
+            if '_other.wav' in au:
+                Path(au).unlink()
             else:
-                src = audio
+                src = au
     
     move(src, f'{output}/{base_name}.wav')
     svp_path = wav2svp(f'{output}/{base_name}.wav', tempo, output)
     svp2ustx(svp_path)
-    rmtree('tempfiles')
     rmtree('results')
     
 #==============命令行==============
