@@ -26,7 +26,7 @@ def random_filename():
 
 #==============人声分离==============
 #分离人声伴奏
-def vocal_remover_step1(input, output):
+def vocal_separation_step1(input, output):
     logger = get_logger(console_level=logging.INFO)
     warnings.filterwarnings("ignore", category=UserWarning)
     start_time = time()
@@ -47,7 +47,7 @@ def vocal_remover_step1(input, output):
     logger.info(f"Successfully separated files: {success_files}, total time: {time() - start_time:.2f} seconds.")
     
 #去除和声
-def vocal_remover_step2(input, output):
+def vocal_separation_step2(input, output):
     logger = get_logger(console_level=logging.INFO)
     warnings.filterwarnings("ignore", category=UserWarning)
     start_time = time()
@@ -68,7 +68,7 @@ def vocal_remover_step2(input, output):
     logger.info(f"Successfully separated files: {success_files}, total time: {time() - start_time:.2f} seconds.")
     
 #去除混响
-def vocal_remover_step3(input, output):
+def vocal_separation_step3(input, output):
     logger = get_logger(console_level=logging.INFO)
     warnings.filterwarnings("ignore", category=UserWarning)
     start_time = time()
@@ -89,7 +89,7 @@ def vocal_remover_step3(input, output):
     logger.info(f"Successfully separated files: {success_files}, total time: {time() - start_time:.2f} seconds.")
     
 #去除噪声
-def vocal_remover_step4(input, output):
+def vocal_separation_step4(input, output):
     logger = get_logger(console_level=logging.INFO)
     warnings.filterwarnings("ignore", category=UserWarning)
     start_time = time()
@@ -201,15 +201,15 @@ def wav2ustx(audio, tempo, enabled_steps, output):
     
     
     #执行步骤
-    if 'voice_remove' in enabled_steps:
+    if 'vocal_separation' in enabled_steps:
         Path('results/step1').mkdir(parents=True, exist_ok=True)
-        vocal_remover_step1(src, 'results/step1')
+        vocal_separation_step1(src, 'results/step1')
         move(f'results/step1/{base_name}_instrumental.wav', f'{output}/{base_name}_instrumental.wav')
         src = f'results/step1/{base_name}_vocals.wav'
         
-    if 'harmony_remove' in enabled_steps:
+    if 'harmony_removal' in enabled_steps:
         Path('results/step2').mkdir(parents=True, exist_ok=True)
-        vocal_remover_step2(src, 'results/step2')
+        vocal_separation_step2(src, 'results/step2')
         audios = glob(f'results/step2/*.wav')
         for au in audios:
             if '_other.wav' in au:
@@ -219,7 +219,7 @@ def wav2ustx(audio, tempo, enabled_steps, output):
         
     if 'deverb' in enabled_steps:
         Path('results/step3').mkdir(parents=True, exist_ok=True)
-        vocal_remover_step3(src, 'results/step3')
+        vocal_separation_step3(src, 'results/step3')
         audios = glob(f'results/step3/*.wav')
         for au in audios:
             if '_reverb.wav' in au:
@@ -229,7 +229,7 @@ def wav2ustx(audio, tempo, enabled_steps, output):
         
     if 'denoise' in enabled_steps:
         Path('results/step4').mkdir(parents=True, exist_ok=True)
-        vocal_remover_step4(src, 'results/step4')
+        vocal_separation_step4(src, 'results/step4')
         audios = glob(f'results/step4/*.wav')
         for au in audios:
             if '_other.wav' in au:
@@ -248,6 +248,6 @@ if __name__ == '__main__':
     parser.add_argument('audio', type=str, help='音频文件')
     parser.add_argument('output', type=str, help='输出文件夹')
     parser.add_argument('-t','--tempo', type=int, help='曲速', default=120)
-    parser.add_argument('-s','--enabled_steps', type=str, help='启用的步骤，用逗号分隔，可选值：voice_remove, harmony_remove, deverb, denoise')
+    parser.add_argument('-s','--enabled_steps', type=str, help='启用的步骤，用逗号分隔，可选值：vocal_separation, harmony_removal, deverb, denoise')
     args = parser.parse_args()
     wav2ustx(args.audio, args.tempo, args.enabled_steps.split(','), args.output)
